@@ -3,7 +3,9 @@ package co.edu.ufps.services;
 import co.edu.ufps.dto.*;
 import co.edu.ufps.entities.Compra;
 import co.edu.ufps.entities.Tienda;
+import co.edu.ufps.entities.TipoPago;
 import co.edu.ufps.entities.Vendedor;
+import co.edu.ufps.entities.Cajero;
 import co.edu.ufps.entities.Cliente;
 import co.edu.ufps.entities.Producto;
 import co.edu.ufps.entities.Pago;
@@ -16,11 +18,14 @@ import co.edu.ufps.repositories.PagoRepository;
 import co.edu.ufps.repositories.ProductoRepository;
 import co.edu.ufps.repositories.TiendaRepository;
 import co.edu.ufps.repositories.TipoDocumentoRepository;
+import co.edu.ufps.repositories.TipoPagoRepository;
 import co.edu.ufps.repositories.VendedorRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +55,9 @@ public class CompraService {
 
     @Autowired
     private CajeroRepository cajeroRepository;
+    
+    @Autowired
+    private TipoPagoRepository tipoPagoRepository;
 
     public List<Compra> list() {
         return compraRepository.findAll();
@@ -102,7 +110,7 @@ public class CompraService {
                 .orElseThrow(() -> new RuntimeException("El vendedor no existe en la tienda"));
 
         // Validar cajero
-        Cajero cajero = cajeroRepository.findByToken(compraRequest.getCajero().getToken(), tiendaId)
+        Cajero cajero = cajeroRepository.findByToken(compraRequest.getCajero().getToken())
                 .orElseThrow(() -> new RuntimeException("El token no corresponde a ningún cajero en la tienda"));
 
         // Crear la compra
@@ -209,7 +217,7 @@ public class CompraService {
                     .orElseThrow(() -> new RuntimeException("Tipo de pago no permitido en la tienda"));
             Pago pago = new Pago();
             pago.setTipoPago(tipoPago);
-            pago.setValor(pagoDTO.getValor());
+            pago.setValor(Double.parseDouble(pagoDTO.getValor()));
             pago.setCompra(compra);
             pagoRepository.save(pago);
         }

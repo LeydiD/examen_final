@@ -1,5 +1,7 @@
 package co.edu.ufps.controller;
 
+import co.edu.ufps.dto.CompraRequestDTO;
+import co.edu.ufps.dto.CompraResponseDTO;
 import co.edu.ufps.entities.Compra;
 import co.edu.ufps.services.CompraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +40,16 @@ public class CompraController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+    
+    @PostMapping("/crear/{tiendaId}")
+    public ResponseEntity<CompraResponseDTO> crearCompra(@PathVariable String tiendaId, 
+                                                        @RequestBody CompraRequestDTO compraRequest) {
+        try {
+            CompraResponseDTO compraResponse = compraService.crearCompra(tiendaId, compraRequest);
+            return ResponseEntity.ok(compraResponse);  // Retorna la respuesta con estado 200 OK
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new CompraResponseDTO("error", e.getMessage()));  // Retorna 400 en caso de error
+        }
     }
 }
