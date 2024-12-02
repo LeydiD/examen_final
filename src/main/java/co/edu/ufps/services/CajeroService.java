@@ -32,7 +32,7 @@ public class CajeroService {
         cajero.setNombre(cajeroDetails.getNombre());
         cajero.setDocumento(cajeroDetails.getDocumento());
         cajero.setEmail(cajeroDetails.getEmail());
-        cajero.setToken(cajeroDetails.getToken());
+//        cajero.setToken(cajeroDetails.getToken());
         cajero.setTienda(cajeroDetails.getTienda());
 
         return Optional.of(cajeroRepository.save(cajero));
