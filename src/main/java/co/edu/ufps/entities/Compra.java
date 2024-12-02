@@ -28,7 +28,7 @@ public class Compra {
 	private Integer id;
 	
 	@Column(name="total")
-	private Integer total;
+	private Double total;
 	
 	@Column(name="impuestos")
 	private Integer impuestos;
