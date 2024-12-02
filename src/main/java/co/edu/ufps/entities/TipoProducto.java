@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name="tipo_snack")
+@Table(name="tipo_producto")
 @Data
 public class TipoProducto {
 
@@ -30,6 +30,5 @@ public class TipoProducto {
 	@OneToMany(mappedBy = "tipoProducto", cascade= CascadeType.ALL)
 	@JsonIgnore
 	private List<Producto> productos;
-	
 	
 }

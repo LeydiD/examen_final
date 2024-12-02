@@ -17,9 +17,9 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name="producto")
+@Table(name="tienda")
 @Data
-public class Producto {
+public class Tienda {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="id")
@@ -28,21 +28,17 @@ public class Producto {
 	@Column(name="nombre")
 	private String nombre;
 	
-	@Column(name="descripcion")
-	private String descripcion;
+	@Column(name="direccion")
+	private String direccion;
 	
-	@Column(name="precio")
-	private Double precio;
+	@Column(name="uuid")
+	private String uuid;
 	
-	@ManyToOne
-	@JoinColumn(name="tipo_producto_id")
-	private TipoProducto tipoProducto;
-	
-	@Column(name="cantidad")
-	private Integer cantidad;
-	
-	
-	@OneToMany(mappedBy = "producto", cascade= CascadeType.ALL)
+	@OneToMany(mappedBy = "tienda", cascade= CascadeType.ALL)
 	@JsonIgnore
-	private List<DetallesCompra> detallesCompra;
+	private List<Cajero> cajero;
+	
+	@OneToMany(mappedBy = "tienda", cascade= CascadeType.ALL)
+	@JsonIgnore
+	private List<Compra> compras;
 }
