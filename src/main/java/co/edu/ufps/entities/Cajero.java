@@ -35,7 +35,7 @@ public class Cajero {
 	private String email;
 	
 	@Column(name="token")
-	private String tokem;
+	private String token;
 	
 	@ManyToOne
 	@JoinColumn(name="tienda_id")

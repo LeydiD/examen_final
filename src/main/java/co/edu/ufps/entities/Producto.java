@@ -41,6 +41,9 @@ public class Producto {
 	@Column(name="cantidad")
 	private Integer cantidad;
 	
+	@Column(name="referencia")
+	private String referencia;
+	
 	@OneToMany(mappedBy = "producto", cascade= CascadeType.ALL)
 	@JsonIgnore
 	private List<DetallesCompra> detallesCompra;

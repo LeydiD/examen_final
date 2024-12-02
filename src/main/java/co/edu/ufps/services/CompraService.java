@@ -3,6 +3,7 @@ package co.edu.ufps.services;
 import co.edu.ufps.dto.*;
 import co.edu.ufps.entities.Compra;
 import co.edu.ufps.entities.Tienda;
+import co.edu.ufps.entities.TipoDocumento;
 import co.edu.ufps.entities.TipoPago;
 import co.edu.ufps.entities.Vendedor;
 import co.edu.ufps.entities.Cajero;
@@ -58,6 +59,9 @@ public class CompraService {
     
     @Autowired
     private TipoPagoRepository tipoPagoRepository;
+    
+    @Autowired
+    private TipoDocumentoRepository tipoDocumentoRepository;
 
     public List<Compra> list() {
         return compraRepository.findAll();
@@ -100,9 +104,8 @@ public class CompraService {
                 .orElseThrow(() -> new RuntimeException("La tienda no existe"));
 
         // Validar y registrar el cliente
-        Cliente cliente = clienteRepository.findByDocumentoAndTipoDocumento(
-                compraRequest.getCliente().getDocumento(),
-                compraRequest.getCliente().getTipoDocumento()
+        Cliente cliente = clienteRepository.findByDocumento(
+                compraRequest.getCliente().getDocumento()
         ).orElseGet(() -> registrarNuevoCliente(compraRequest.getCliente()));
 
         // Validar vendedor
@@ -150,7 +153,8 @@ public class CompraService {
         Cliente cliente = new Cliente();
         cliente.setDocumento(clienteDTO.getDocumento());
         cliente.setNombre(clienteDTO.getNombre());
-        cliente.setTipoDocumento(clienteDTO.getTipoDocumento());
+        TipoDocumento tipoDocumento= tipoDocumentoRepository.findByNombre(clienteDTO.getTipoDocumento()).orElseThrow(() -> new RuntimeException("El tipo de documento no existe"));
+        cliente.setTipoDocumento(tipoDocumento);
         return clienteRepository.save(cliente);
     }
 
