@@ -41,7 +41,6 @@ public class Producto {
 	@Column(name="cantidad")
 	private Integer cantidad;
 	
-	
 	@OneToMany(mappedBy = "producto", cascade= CascadeType.ALL)
 	@JsonIgnore
 	private List<DetallesCompra> detallesCompra;
