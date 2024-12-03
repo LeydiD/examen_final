@@ -42,11 +42,11 @@ public class CompraController {
         return ResponseEntity.notFound().build();
     }
     
-    @PostMapping("/crear/{tiendaId}")
-    public ResponseEntity<CompraResponseDTO> crearCompra(@PathVariable String tiendaId, 
+    @PostMapping("/crear/{uuid}")
+    public ResponseEntity<CompraResponseDTO> crearCompra(@PathVariable String uuid, 
                                                         @RequestBody CompraRequestDTO compraRequest) {
         try {
-            CompraResponseDTO compraResponse = compraService.crearCompra(tiendaId, compraRequest);
+            CompraResponseDTO compraResponse = compraService.crearCompra(uuid, compraRequest);
             return ResponseEntity.ok(compraResponse);  // Retorna la respuesta con estado 200 OK
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new CompraResponseDTO("error", e.getMessage()));  // Retorna 400 en caso de error

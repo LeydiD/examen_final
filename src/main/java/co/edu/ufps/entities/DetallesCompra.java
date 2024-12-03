@@ -37,9 +37,9 @@ public class DetallesCompra {
 	private Integer cantidad;
 	
 	@Column(name="precio")
-	private Integer precio;
+	private double precio;
 	
 	@Column(name="descuento")
-	private Integer descuento;
+	private double descuento;
 	
 }

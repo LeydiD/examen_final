@@ -6,5 +6,5 @@ import lombok.Data;
 public class ClienteDTO {
     private String documento;
     private String nombre;
-    private String tipoDocumento;
+    private String tipo_documento;
 }

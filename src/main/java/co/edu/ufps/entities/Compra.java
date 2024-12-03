@@ -31,7 +31,7 @@ public class Compra {
 	private Double total;
 	
 	@Column(name="impuestos")
-	private Integer impuestos;
+	private Double impuestos;
 	
 	@Column(name="fecha")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -61,7 +61,7 @@ public class Compra {
 	private Vendedor vendedor;
 	
 	@ManyToOne
-	@JoinColumn(name="cajero_id")
+	@JoinColumn(name="cajero_id", nullable=false)
 	private Cajero cajero;
 	
 	

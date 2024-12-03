@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class MedioPagoDTO {
-    private String tipoPago;
-    private String tipoTarjeta;
+    private String tipo_pago;
+    private String tipo_tarjeta;
     private Integer cuotas;
     private String valor;
 }

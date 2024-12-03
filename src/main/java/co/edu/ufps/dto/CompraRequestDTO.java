@@ -1,5 +1,6 @@
 package co.edu.ufps.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
@@ -9,7 +10,11 @@ public class CompraRequestDTO {
     private Double impuesto;
     private ClienteDTO cliente;
     private List<ProductoDTO> productos;
-    private List<MedioPagoDTO> mediosPago;
+    private List<MedioPagoDTO> medios_pago;
     private VendedorDTO vendedor;
     private CajeroDTO cajero;
+    
+    public CompraRequestDTO() {
+        this.medios_pago = new ArrayList<>();  // Inicializa la lista como vacía
+    }
 }

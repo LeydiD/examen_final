@@ -34,211 +34,238 @@ import java.util.Optional;
 public class CompraService {
 
 	@Autowired
-    private CompraRepository compraRepository;
+	private CompraRepository compraRepository;
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+	@Autowired
+	private ClienteRepository clienteRepository;
 
-    @Autowired
-    private ProductoRepository productoRepository;
+	@Autowired
+	private ProductoRepository productoRepository;
 
-    @Autowired
-    private DetallesCompraRepository detallesCompraRepository;
+	@Autowired
+	private DetallesCompraRepository detallesCompraRepository;
 
-    @Autowired
-    private PagoRepository pagoRepository;
+	@Autowired
+	private PagoRepository pagoRepository;
 
-    @Autowired
-    private TiendaRepository tiendaRepository;
+	@Autowired
+	private TiendaRepository tiendaRepository;
 
-    @Autowired
-    private VendedorRepository vendedorRepository;
+	@Autowired
+	private VendedorRepository vendedorRepository;
 
-    @Autowired
-    private CajeroRepository cajeroRepository;
-    
-    @Autowired
-    private TipoPagoRepository tipoPagoRepository;
-    
-    @Autowired
-    private TipoDocumentoRepository tipoDocumentoRepository;
+	@Autowired
+	private CajeroRepository cajeroRepository;
 
-    public List<Compra> list() {
-        return compraRepository.findAll();
-    }
+	@Autowired
+	private TipoPagoRepository tipoPagoRepository;
 
-    public Compra create(Compra compra) {
-        return compraRepository.save(compra);
-    }
+	@Autowired
+	private TipoDocumentoRepository tipoDocumentoRepository;
 
-    public Optional<Compra> update(Integer id, Compra compraDetails) {
-        Optional<Compra> optionalCompra = compraRepository.findById(id);
-        if (!optionalCompra.isPresent()) {
-            return Optional.empty();
-        }
+	public List<Compra> list() {
+		return compraRepository.findAll();
+	}
 
-        Compra compra = optionalCompra.get();
-        compra.setFecha(compraDetails.getFecha());
-        compra.setImpuestos(compraDetails.getImpuestos());
-        compra.setCliente(compraDetails.getCliente());
+	public Compra create(Compra compra) {
+		return compraRepository.save(compra);
+	}
 
-        return Optional.of(compraRepository.save(compra));
-    }
+	public Optional<Compra> update(Integer id, Compra compraDetails) {
+		Optional<Compra> optionalCompra = compraRepository.findById(id);
+		if (!optionalCompra.isPresent()) {
+			return Optional.empty();
+		}
 
-    public boolean delete(Integer id) {
-        Optional<Compra> optionalCompra = compraRepository.findById(id);
-        if (!optionalCompra.isPresent()) {
-            return false;
-        }
-        compraRepository.delete(optionalCompra.get());
-        return true;
-    }
-    
-    
-    public CompraResponseDTO crearCompra(String tiendaId, CompraRequestDTO compraRequest) {
-        // Validar que los datos de la compra sean correctos
-        validarEntrada(compraRequest);
+		Compra compra = optionalCompra.get();
+		compra.setFecha(compraDetails.getFecha());
+		compra.setImpuestos(compraDetails.getImpuestos());
+		compra.setCliente(compraDetails.getCliente());
 
-        // Obtener la tienda
-        Tienda tienda = tiendaRepository.findByUuid(tiendaId)
-                .orElseThrow(() -> new RuntimeException("La tienda no existe"));
+		return Optional.of(compraRepository.save(compra));
+	}
 
-        // Validar y registrar el cliente
-        Cliente cliente = clienteRepository.findByDocumento(
-                compraRequest.getCliente().getDocumento()
-        ).orElseGet(() -> registrarNuevoCliente(compraRequest.getCliente()));
+	public boolean delete(Integer id) {
+		Optional<Compra> optionalCompra = compraRepository.findById(id);
+		if (!optionalCompra.isPresent()) {
+			return false;
+		}
+		compraRepository.delete(optionalCompra.get());
+		return true;
+	}
 
-        // Validar vendedor
-        Vendedor vendedor = vendedorRepository.findByDocumento(compraRequest.getVendedor().getDocumento())
-                .orElseThrow(() -> new RuntimeException("El vendedor no existe en la tienda"));
+	public CompraResponseDTO crearCompra(String tiendaId, CompraRequestDTO compraRequest) {
+		// Validar que los datos de la compra sean correctos
+		validarEntrada(compraRequest);
 
-        // Validar cajero
-        Cajero cajero = cajeroRepository.findByToken(compraRequest.getCajero().getToken())
-                .orElseThrow(() -> new RuntimeException("El token no corresponde a ningún cajero en la tienda"));
+		// Obtener la tienda
+		Tienda tienda = tiendaRepository.findByUuid(tiendaId)
+				.orElseThrow(() -> new RuntimeException("La tienda no existe"));
 
-        // Crear la compra
-        Compra compra = new Compra();
-        compra.setCliente(cliente);
-        compra.setTienda(tienda);
-        compra.setVendedor(vendedor);
-        compra.setCajero(cajero);
-        compra.setFecha(LocalDate.now());
-        
-        // Agregar productos a la compra
-        List<Producto> productos = validarYObtenerProductos(compraRequest.getProductos());
-        
-        // Guardar los detalles de la compra
-        List<DetallesCompra> detallesCompra = crearDetallesCompra(compra, productos);
-        compra.setDetallesCompra(detallesCompra);
-        
-        // Calcular total de la compra
-        Double total = calcularTotal(detallesCompra);
-        compra.setTotal(total);
-        
-        // Calcular impuestos
-        Double impuestos = calcularImpuestos(total);
-        compra.setImpuestos(impuestos.intValue());
+		// Validar y registrar el cliente
+		TipoDocumento tipoDocumentoCliente = tipoDocumentoRepository
+				.findByNombre(compraRequest.getCliente().getTipo_documento())
+				.orElseThrow(() -> new RuntimeException("No se encontró el tipo de documento"));
 
-        // Guardar la compra en la base de datos
-        compraRepository.save(compra);
+		Cliente cliente = clienteRepository
+				.findByDocumentoAndTipoDocumento(compraRequest.getCliente().getDocumento(), tipoDocumentoCliente)
+				.orElseGet(() -> registrarNuevoCliente(compraRequest.getCliente()));
 
-        // Registrar pagos
-        registrarPagos(compraRequest.getMediosPago(), compra);
+		// Validar vendedor
+		Vendedor vendedor = vendedorRepository.findByDocumento(compraRequest.getVendedor().getDocumento())
+				.orElseThrow(() -> new RuntimeException("El vendedor no existe en la tienda"));
 
-        // Retornar la respuesta de la compra
-        return crearRespuesta(compra);
-    }
+		// Validar cajero	
+		Cajero cajero = cajeroRepository.findByToken(compraRequest.getCajero().getToken())
+				.orElseThrow(() -> new RuntimeException("El token no corresponde a ningún cajero en la tienda"));
+		
+		if (!cajero.getTienda().getId().equals(tienda.getId())) {
+		    throw new RuntimeException("El cajero no está asignado a esta tienda");
+		}
+		
+		// Crear la compra
+		Compra compra = new Compra();
+		
+		compra.setImpuestos(compraRequest.getImpuesto());
+		compra.setCliente(cliente);
+		compra.setTienda(tienda);
+		compra.setVendedor(vendedor);
+		compra.setCajero(cajero);
+		compra.setFecha(LocalDate.now());
+		// Agregar productos a la compra
+		List<Producto> productos = validarYObtenerProductos(compraRequest.getProductos());
 
-    private Cliente registrarNuevoCliente(ClienteDTO clienteDTO) {
-        Cliente cliente = new Cliente();
-        cliente.setDocumento(clienteDTO.getDocumento());
-        cliente.setNombre(clienteDTO.getNombre());
-        TipoDocumento tipoDocumento= tipoDocumentoRepository.findByNombre(clienteDTO.getTipoDocumento()).orElseThrow(() -> new RuntimeException("El tipo de documento no existe"));
-        cliente.setTipoDocumento(tipoDocumento);
-        return clienteRepository.save(cliente);
-    }
+		// Guardar los detalles de la compra
+		compra = compraRepository.save(compra);
+		List<DetallesCompra> detallesCompra = crearDetallesCompra(compra, compraRequest.getProductos());
+		compra.setDetallesCompra(detallesCompra);
+		
+		Double totalPagos = calcularTotalMediosPago(compraRequest.getMedios_pago());
+	    Double totalFactura = calcularTotalFactura(detallesCompra, compraRequest.getImpuesto());
 
-    private void validarEntrada(CompraRequestDTO compraRequest) {
-        if (compraRequest.getCliente() == null) {
-            throw new RuntimeException("No hay información del cliente");
-        }
-        if (compraRequest.getProductos().isEmpty()) {
-            throw new RuntimeException("No hay productos asignados para esta compra");
-        }
-        if (compraRequest.getMediosPago().isEmpty()) {
-            throw new RuntimeException("No hay medios de pagos asignados para esta compra");
-        }
-        if (compraRequest.getVendedor() == null) {
-            throw new RuntimeException("No hay información del vendedor");
-        }
-        if (compraRequest.getCajero() == null) {
-            throw new RuntimeException("No hay información del cajero");
-        }
-    }
+	    // Validar que los valores coincidan
+	    if (!totalPagos.equals(totalFactura)) {
+	        throw new RuntimeException("El valor de la factura no coincide con el valor total de los pagos");
+	    }
+		
+		registrarPagos(compraRequest.getMedios_pago(), compra);
+		compra.setTotal(totalFactura);
 
-    private List<Producto> validarYObtenerProductos(List<ProductoDTO> productosDTO) {
-        List<Producto> productos = new ArrayList<>();
-        for (ProductoDTO productoDTO : productosDTO) {
-            Producto producto = productoRepository.findByReferencia(productoDTO.getReferencia())
-                    .orElseThrow(() -> new RuntimeException("La referencia del producto " + productoDTO.getReferencia() + " no existe, por favor revisar los datos"));
-            // Validar que la cantidad no supere el stock disponible
-            if (productoDTO.getCantidad() > producto.getCantidad()) {
-                throw new RuntimeException("La cantidad a comprar supera el máximo del producto en tienda");
-            }
-            productos.add(producto);
-        }
-        return productos;
-    }
+		// Guardar la compra en la base de datos
+		compraRepository.save(compra);
 
-    private List<DetallesCompra> crearDetallesCompra(Compra compra, List<Producto> productos) {
-        List<DetallesCompra> detallesCompra = new ArrayList<>();
-        for (Producto producto : productos) {
-            DetallesCompra detalle = new DetallesCompra();
-            detalle.setCompra(compra);
-            detalle.setProducto(producto);
-            detalle.setCantidad(1); // Asumiendo que por ahora es cantidad 1 por producto
-            detallesCompra.add(detalle);
-        }
-        detallesCompraRepository.saveAll(detallesCompra);
-        return detallesCompra;
-    }
+		// Retornar la respuesta de la compra
+		return crearRespuesta(compra);
+	}
 
-    private Double calcularTotal(List<DetallesCompra> detallesCompra) {
-        double total = 0;
-        for (DetallesCompra detalle : detallesCompra) {
-            total += detalle.getProducto().getPrecio() * detalle.getCantidad();
-        }
-        return total;
-    }
+	private Cliente registrarNuevoCliente(ClienteDTO clienteDTO) {
+		Cliente cliente = new Cliente();
+		cliente.setDocumento(clienteDTO.getDocumento());
+		cliente.setNombre(clienteDTO.getNombre());
+		TipoDocumento tipoDocumento = tipoDocumentoRepository.findByNombre(clienteDTO.getTipo_documento())
+				.orElseThrow(() -> new RuntimeException("El tipo de documento no existe"));
+		cliente.setTipoDocumento(tipoDocumento);
+		return clienteRepository.save(cliente);
+	}
 
-    private Double calcularImpuestos(Double total) {
-        return total * 0.19; // Asumiendo un impuesto del 19%
-    }
+	private void validarEntrada(CompraRequestDTO compraRequest) {
+		if (compraRequest.getCliente() == null) {
+			throw new RuntimeException("No hay información del cliente");
+		}
+		if (compraRequest.getProductos().isEmpty()) {
+			throw new RuntimeException("No hay productos asignados para esta compra");
+		}
+		if (compraRequest.getMedios_pago().isEmpty()) {
+			throw new RuntimeException("No hay medios de pagos asignados para esta compra");
+		}
+		if (compraRequest.getVendedor() == null) {
+			throw new RuntimeException("No hay información del vendedor");
+		}
+		if (compraRequest.getCajero() == null) {
+			throw new RuntimeException("No hay información del cajero");
+		}
+	}
 
-    private void registrarPagos(List<MedioPagoDTO> mediosPago, Compra compra) {
-        for (MedioPagoDTO pagoDTO : mediosPago) {
-            TipoPago tipoPago = tipoPagoRepository.findByNombre(pagoDTO.getTipoPago())
-                    .orElseThrow(() -> new RuntimeException("Tipo de pago no permitido en la tienda"));
-            Pago pago = new Pago();
-            pago.setTipoPago(tipoPago);
-            pago.setValor(Double.parseDouble(pagoDTO.getValor()));
-            pago.setCompra(compra);
-            pagoRepository.save(pago);
-        }
-    }
+	private List<Producto> validarYObtenerProductos(List<ProductoDTO> productosDTO) {
+		List<Producto> productos = new ArrayList<>();
+		for (ProductoDTO productoDTO : productosDTO) {
+			Producto producto = productoRepository.findByReferencia(productoDTO.getReferencia())
+					.orElseThrow(() -> new RuntimeException("La referencia del producto " + productoDTO.getReferencia()
+							+ " no existe, por favor revisar los datos"));
+			// Validar que la cantidad no supere el stock disponible
+			if (productoDTO.getCantidad() > producto.getCantidad()) {
+				throw new RuntimeException("La cantidad a comprar supera el máximo del producto en tienda");
+			}
+			productos.add(producto);
+		}
+		return productos;
+	}
 
-    private CompraResponseDTO crearRespuesta(Compra compra) {
-        CompraResponseDTO response = new CompraResponseDTO();
-        response.setStatus("success");
-        response.setMessage("La compra se ha creado correctamente con el número: " + compra.getId());
+	private List<DetallesCompra> crearDetallesCompra(Compra compra, List<ProductoDTO> productosDTO) {
+		List<DetallesCompra> detallesCompra = new ArrayList<>();
+		for (ProductoDTO productoDTO : productosDTO) {
+			Producto producto = productoRepository.findByReferencia(productoDTO.getReferencia())
+					.orElseThrow(() -> new RuntimeException("La referencia del producto " + productoDTO.getReferencia()
+							+ " no existe, por favor revisar los datos"));
+			DetallesCompra detalle = new DetallesCompra();
+			detalle.setCompra(compra);
+			detalle.setProducto(producto);
+			detalle.setCantidad(productoDTO.getCantidad());
+			detalle.setDescuento(productoDTO.getDescuento());
+			detallesCompra.add(detalle);
+		}
+		detallesCompraRepository.saveAll(detallesCompra);
+		return detallesCompra;
 
-        CompraDataDTO data = new CompraDataDTO();
-        data.setNumero(compra.getId().toString());
-        data.setTotal(String.valueOf(compra.getTotal()));
-        data.setFecha(compra.getFecha().toString());
-        response.setData(data);
+	}
+	
+	private Double calcularTotalFactura(List<DetallesCompra> detallesCompra, Double impuesto) {
+	    double total = 0;
+	    for (DetallesCompra detalle : detallesCompra) {
+	        double precio = detalle.getProducto().getPrecio();
+	        int cantidad = detalle.getCantidad();
+	        double descuento = detalle.getDescuento();
+	        total += precio * cantidad * (1 - descuento / 100);
+	    }
+	    Double totalImpuesto = total * (impuesto / 100);
+	    return total+totalImpuesto;
+	}
 
-        return response;
-    }
+	
+	private Double calcularTotalMediosPago(List<MedioPagoDTO> mediosPago) {
+	    double total = 0;
+	    for (MedioPagoDTO pago : mediosPago) {
+	        total += Double.parseDouble(pago.getValor());
+	    }
+	    return total;
+	}
+
+	private void registrarPagos(List<MedioPagoDTO> mediosPago, Compra compra) {
+		for (MedioPagoDTO pagoDTO : mediosPago) {
+			TipoPago tipoPago = tipoPagoRepository.findByNombre(pagoDTO.getTipo_pago())
+					.orElseThrow(() -> new RuntimeException("Tipo de pago no permitido en la tienda"));
+			Pago pago = new Pago();
+			pago.setTipoPago(tipoPago);
+			pago.setCuotas(pagoDTO.getCuotas());
+			pago.setTarjetaTipo(pagoDTO.getTipo_tarjeta());
+			pago.setValor(Double.parseDouble(pagoDTO.getValor()));
+			pago.setCompra(compra);
+			pagoRepository.save(pago);
+		}
+	}
+
+	private CompraResponseDTO crearRespuesta(Compra compra) {
+		CompraResponseDTO response = new CompraResponseDTO();
+		response.setStatus("success");
+		response.setMessage("La compra se ha creado correctamente con el número: " + compra.getId());
+
+		CompraDataDTO data = new CompraDataDTO();
+		data.setNumero(compra.getId().toString());
+		data.setTotal(String.valueOf(compra.getTotal()));
+		data.setFecha(compra.getFecha().toString());
+		response.setData(data);
+
+		return response;
+	}
 
 }
