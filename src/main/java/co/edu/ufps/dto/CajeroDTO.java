@@ -5,4 +5,7 @@ import lombok.Data;
 @Data
 public class CajeroDTO {
     private String token;
+    private String documento;
+    private String nombre;
+    
 }
