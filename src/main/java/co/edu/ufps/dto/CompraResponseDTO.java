@@ -15,5 +15,4 @@ public class CompraResponseDTO {
         this.status = status;
         this.message = message;
     }
-    // Getters and Setters
 }

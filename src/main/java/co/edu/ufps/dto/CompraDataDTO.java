@@ -9,5 +9,4 @@ public class CompraDataDTO {
     private String total;
     private String fecha;
 
-    // Getters and Setters
 }

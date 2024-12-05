@@ -15,6 +15,6 @@ public class CompraRequestDTO {
     private CajeroDTO cajero;
     
     public CompraRequestDTO() {
-        this.medios_pago = new ArrayList<>();  // Inicializa la lista como vacía
+        this.medios_pago = new ArrayList<>();  
     }
 }

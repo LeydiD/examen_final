@@ -7,6 +7,7 @@ import co.edu.ufps.dto.FacturaResponseDTO;
 import co.edu.ufps.entities.Compra;
 import co.edu.ufps.services.CompraService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,14 +57,16 @@ public class CompraController {
     }
     
     
-    @PostMapping("/consultar/{uuid}")
-    public ResponseEntity<FacturaResponseDTO> consultarFactura(@PathVariable String uuid,
-    		@RequestBody ConsultaFacturaRequestDTO consultaRequest) {
+    
+    @PostMapping("/consultar/{tiendaUuid}")
+    public ResponseEntity<?> consultarFactura(
+            @PathVariable String tiendaUuid,
+            @RequestBody ConsultaFacturaRequestDTO consultaRequest) {
         try {
-            FacturaResponseDTO facturaResponse = compraService.consultarFactura(consultaRequest);
-            return ResponseEntity.ok(facturaResponse);  // Retorna la respuesta con estado 200 OK
+            FacturaResponseDTO response = compraService.consultarFactura(tiendaUuid, consultaRequest);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();  // Retorna 400 en caso de error
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }
